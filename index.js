@@ -61,14 +61,19 @@ app.delete('/api/persons/:id', (request, response) => {
 app.post('/api/persons', jsonParser, (request, response) => {
   const body = request.body
 
-  console.log(request.body)
-
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: 'name or number missing'
     })
   }
 
+  const duplicatedName = persons.some(person => person.name === body.name);
+
+  if (duplicatedName) {
+    return response.status(422).json({
+      error: "A person with this name is already in registered"
+    });
+  }
   const person = {
     id: Math.floor(Math.random() * 100000000000),
     name: body.name,
