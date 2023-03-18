@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const jsonParser = bodyParser.json();
+const morgan = require("morgan");
 
 let persons = [
   {
@@ -84,6 +85,10 @@ app.post('/api/persons', jsonParser, (request, response) => {
 
   response.json(person)
 })
+
+app.use(
+  morgan('tiny')
+);
 
 const PORT = 3001;
 
