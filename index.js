@@ -26,6 +26,16 @@ let persons = [
     "number": "39-23-6423122"
   }
 ]
+morgan.token('info', (request) => {
+  if (request.method === 'POST') return JSON.stringify(request.body)
+  return null
+})
+
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms :info',
+  ),
+)
 
 app.get('/api/persons', (request,response) => {
   response.json(persons)
@@ -85,10 +95,6 @@ app.post('/api/persons', jsonParser, (request, response) => {
 
   response.json(person)
 })
-
-app.use(
-  morgan('tiny')
-);
 
 const PORT = 3001;
 
