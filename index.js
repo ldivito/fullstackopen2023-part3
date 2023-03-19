@@ -1,32 +1,31 @@
+require('dotenv').config()
 const express = require("express");
 const app = express();
+const mongoose = require('mongoose')
 const bodyParser = require("body-parser");
 const jsonParser = bodyParser.json();
 const morgan = require("morgan");
 const cors = require('cors')
 
-let persons = [
-  {
-    "id": 1,
-    "name": "Arto Hellas",
-    "number": "040-123456"
-  },
-  {
-    "id": 2,
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523"
-  },
-  {
-    "id": 3,
-    "name": "Dan Abramov",
-    "number": "12-43-234345"
-  },
-  {
-    "id": 4,
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122"
-  }
-]
+const url = process.env.MONGODB_URI
+
+console.log('connecting to', url)
+
+mongoose.set('strictQuery',false)
+mongoose.connect(url)
+  .then(result => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connecting to MongoDB:', error.message)
+  })
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+})
+
+const Person = mongoose.model('Person', personSchema, 'persons')
 
 app.use(cors())
 
@@ -45,7 +44,10 @@ app.use(express.static('build'))
 
 
 app.get('/api/persons', (request,response) => {
-  response.json(persons)
+  Person.find({})
+    .then(persons => {
+      response.json(persons)
+    })
 })
 
 app.get('/info', (request, response) => {
