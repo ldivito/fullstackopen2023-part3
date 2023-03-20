@@ -20,7 +20,9 @@ app.use(
   ),
 )
 
-app.get('/api/persons', (request,response) => {
+app.use(express.static("build"));
+
+app.get('/api/persons', (request,response, next) => {
   Person.find({})
     .then(persons => {
       response.json(persons)
@@ -28,7 +30,7 @@ app.get('/api/persons', (request,response) => {
     .catch(error => next(error))
 })
 
-app.get('/info', (request, response) => {
+app.get('/info', (request, response, next) => {
   Person.countDocuments({}).then(count => {
     let info = `<p>Phonebook has info for ${count} people</p>`
     info += new Date()
@@ -51,13 +53,6 @@ app.get('/api/persons/:id', jsonParser,(request, response, next) => {
 app.put('/api/persons/:id', jsonParser, (request, response, next) => {
   const body = request.body
 
-  if (!body.name) {
-    return response.status(400).json({error: 'No name found'})
-  }
-  else if (!request.body.number) {
-    return response.status(400).json({error: 'No number found'})
-  }
-
   const updatedPerson = {
     name: body.name,
     number: body.number
@@ -78,14 +73,10 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-app.post('/api/persons', jsonParser, (request, response) => {
+app.post('/api/persons', jsonParser, (request, response, next) => {
   const body = request.body
 
-  if(body.name === undefined) {
-    return response.status(400).json({error: 'content missing'})
-  }
-
-/*
+  /*
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: 'name or number missing'
@@ -125,7 +116,10 @@ const errorHandler = (error, req, res, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError' && error.message.includes('ObjectId')) {
-    return res.status(400).send({ error: 'Malformatted ID' })
+    return res.status(400).json({ error: 'Malformatted ID' })
+  }
+  else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
   }
   next(error)
 }

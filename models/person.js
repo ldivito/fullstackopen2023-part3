@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-
 mongoose.set('strictQuery', false)
 
 const url = process.env.MONGODB_URI
@@ -15,8 +14,8 @@ mongoose.connect(url)
   })
 
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {type: String, required: true, unique: true, minLength: 3},
+  number: {type: String, required: true},
 })
 
 personSchema.set('toJSON', {
