@@ -1,31 +1,12 @@
 require('dotenv').config()
 const express = require("express");
-const app = express();
-const mongoose = require('mongoose')
-const bodyParser = require("body-parser");
-const jsonParser = bodyParser.json();
+const bodyParser = require('body-parser')
 const morgan = require("morgan");
 const cors = require('cors')
+const Person = require('./models/person')
 
-const url = process.env.MONGODB_URI
-
-console.log('connecting to', url)
-
-mongoose.set('strictQuery',false)
-mongoose.connect(url)
-  .then(result => {
-    console.log('connected to MongoDB')
-  })
-  .catch((error) => {
-    console.log('error connecting to MongoDB:', error.message)
-  })
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-})
-
-const Person = mongoose.model('Person', personSchema, 'persons')
+const app = express();
+const jsonParser = bodyParser.json()
 
 app.use(cors())
 
@@ -81,6 +62,11 @@ app.delete('/api/persons/:id', (request, response) => {
 app.post('/api/persons', jsonParser, (request, response) => {
   const body = request.body
 
+  if(body.name === undefined) {
+    return response.status(400).json({error: 'content missing'})
+  }
+
+/*
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: 'name or number missing'
@@ -99,10 +85,20 @@ app.post('/api/persons', jsonParser, (request, response) => {
     name: body.name,
     number: body.number,
   }
+*/
 
-  persons = persons.concat(person)
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
 
-  response.json(person)
+  person
+    .save()
+    .then(
+      savedPerson => {
+        response.json(savedPerson)
+      }
+    )
 })
 
 const PORT = process.env.PORT || 3001
