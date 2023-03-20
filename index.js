@@ -8,6 +8,8 @@ const Person = require('./models/person')
 const app = express();
 const jsonParser = bodyParser.json()
 
+app.use(express.static('build'))
+
 app.use(cors())
 
 morgan.token('info', (request) => {
@@ -21,14 +23,12 @@ app.use(
   ),
 )
 
-app.use(express.static('build'))
-
-
 app.get('/api/persons', (request,response) => {
   Person.find({})
     .then(persons => {
       response.json(persons)
     })
+    .catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
@@ -47,15 +47,12 @@ app.get('/api/persons/:id', jsonParser,(request, response) => {
   }
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
       response.status(204).end()
     })
-    .catch(error => {
-      console.log(error)
-      response.status(404).end()
-    })
+    .catch(error => next(error))
 })
 
 app.post('/api/persons', jsonParser, (request, response) => {
@@ -98,7 +95,18 @@ app.post('/api/persons', jsonParser, (request, response) => {
         response.json(savedPerson)
       }
     )
+    .catch(error => next(error))
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError' && error.message.includes('ObjectId')) {
+    return res.status(400).send({ error: 'Malformatted ID' })
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 
