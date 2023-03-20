@@ -1,2 +1,8 @@
-node_mdoules
 .env
+/.dockerignore
+/delete_person.rest
+/Dockerfile
+/fly.toml
+/http-client.env.json
+/.idea/
+/node_modules/
