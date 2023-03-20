@@ -4,11 +4,8 @@ const bodyParser = require('body-parser')
 const morgan = require("morgan");
 const cors = require('cors')
 const Person = require('./models/person')
-
 const app = express();
 const jsonParser = bodyParser.json()
-
-app.use(express.static('build'))
 
 app.use(cors())
 
@@ -32,19 +29,45 @@ app.get('/api/persons', (request,response) => {
 })
 
 app.get('/info', (request, response) => {
-  const infoMessage = `<p>Phonebook has info for ${persons.length} people</p>` + `<p>${new Date()}</p>`;
-  response.send(infoMessage);
+  Person.countDocuments({}).then(count => {
+    let info = `<p>Phonebook has info for ${count} people</p>`
+    info += new Date()
+    response.send(info)
+  }).catch(error => next(error))
 })
 
-app.get('/api/persons/:id', jsonParser,(request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
+app.get('/api/persons/:id', jsonParser,(request, response, next) => {
+  Person.findById(request.params.id).then(result => {
+    if (result) {
+      response.json(result)
+    }
+    else
+    {
+      response.status(404).end()
+    }
+  }).catch(error => next(error))
+})
 
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
+app.put('/api/persons/:id', jsonParser, (request, response, next) => {
+  const body = request.body
+
+  if (!body.name) {
+    return response.status(400).json({error: 'No name found'})
   }
+  else if (!request.body.number) {
+    return response.status(400).json({error: 'No number found'})
+  }
+
+  const updatedPerson = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(request.params.id, updatedPerson, {new: true})
+    .then(result => {
+      response.json(result)
+    })
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
