@@ -48,15 +48,14 @@ app.get('/api/persons/:id', jsonParser,(request, response) => {
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
-    persons = persons.filter(person => person.id != id)
-    response.status(204).end()
-  } else {
-    response.status(404).end()
-  }
+  Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => {
+      console.log(error)
+      response.status(404).end()
+    })
 })
 
 app.post('/api/persons', jsonParser, (request, response) => {
