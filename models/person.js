@@ -21,7 +21,7 @@ const personSchema = new mongoose.Schema({
     validate: {
       validator: (value) => (
         /* The phone number must contain at least 8 digits */
-        value.replace(/[^0-9]/g, "").length >= 8
+        value.replace(/\D/g, "").length >= 8
       )
     },
   }
